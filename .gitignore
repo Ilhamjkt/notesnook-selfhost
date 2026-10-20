@@ -1,0 +1,6 @@
+# Secrets and generated files - never commit
+.env
+.env.bak*
+s3.json
+*.key
+backups/

@@ -1,0 +1,59 @@
+# Local overrides on top of the official notesnook-sync-server compose file.
+# - MinIO images are no longer published, so attachments use SeaweedFS (S3-compatible).
+# - Restart policies so the stack comes back after a reboot.
+# - Token signing / data-protection keys live on volumes so they survive recreates.
+# - mail.example.com resolves to the mail server on the LAN.
+x-restart: &restart
+  restart: unless-stopped
+
+x-smtp: &smtp
+  extra_hosts:
+    - "mail.example.com:192.168.0.130"
+
+services:
+  notesnook-db: *restart
+  sse-server: *restart
+  monograph-server: *restart
+
+  identity-server:
+    <<: [*restart, *smtp]
+    volumes:
+      - identity_keystore:/app/keystore
+      - identity_aspnet:/app/.aspnet
+
+  notesnook-server:
+    <<: [*restart, *smtp]
+    volumes:
+      - sync_aspnet:/app/.aspnet
+
+  notesnook-s3:
+    <<: *restart
+    image: chrislusf/seaweedfs:4.48
+    command: server -dir=/data/s3 -ip=notesnook-s3 -ip.bind=0.0.0.0 -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json
+    volumes:
+      - s3data:/data/s3
+      - ./s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: nc -z 127.0.0.1 9000 || exit 1
+
+  setup-s3:
+    image: amazon/aws-cli:2.31.18
+    entrypoint: /bin/bash
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_DEFAULT_REGION: us-east-1
+    command:
+      - -c
+      - |
+        until aws --endpoint-url http://notesnook-s3:9000 s3api list-buckets >/dev/null 2>&1; do sleep 2; done
+        aws --endpoint-url http://notesnook-s3:9000 s3api head-bucket --bucket attachments 2>/dev/null \
+          || aws --endpoint-url http://notesnook-s3:9000 s3api create-bucket --bucket attachments
+        aws --endpoint-url http://notesnook-s3:9000 s3api put-bucket-cors --bucket attachments --cors-configuration \
+          '{"CORSRules":[{"AllowedOrigins":["*"],"AllowedMethods":["GET","PUT","POST","HEAD","DELETE"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"]}]}' || true
+        echo "bucket ready"
+
+volumes:
+  identity_keystore:
+  identity_aspnet:
+  sync_aspnet:

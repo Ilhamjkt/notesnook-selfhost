@@ -1,0 +1,13 @@
+[Unit]
+Description=Restrict Notesnook ports to Nginx Proxy Manager
+After=docker.service
+Requires=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/notesnook-firewall.sh
+
+[Install]
+WantedBy=docker.service

@@ -1,0 +1,16 @@
+{
+  "npm_host": "192.168.0.120",
+  "forward_host": "192.168.0.110",
+  "forward_scheme": "http",
+  "certificate": "*.example.com (Let's Encrypt wildcard)",
+  "access_list": "LAN-VPN-only",
+  "ssl": { "force_ssl": true, "http2": true, "hsts": false },
+  "block_exploits": true,
+  "hosts": [
+    { "domain": "notes-sync.example.com",   "port": 5264, "websockets": true,  "advanced": "advanced/notes-sync.conf" },
+    { "domain": "notes-auth.example.com",   "port": 8264, "websockets": false, "advanced": null },
+    { "domain": "notes-events.example.com", "port": 7264, "websockets": true,  "advanced": "advanced/notes-events.conf" },
+    { "domain": "notes-mono.example.com",   "port": 6264, "websockets": false, "advanced": null },
+    { "domain": "notes-files.example.com",  "port": 9000, "websockets": false, "advanced": "advanced/notes-files.conf" }
+  ]
+}
