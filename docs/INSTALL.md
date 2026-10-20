@@ -5,7 +5,7 @@ This goes from an empty VM to working apps on every device. Hosts used in the ex
 - Notesnook VM: `192.168.0.110`
 - Nginx Proxy Manager: `192.168.0.120`
 - Mail server: `192.168.0.130` (`mail.example.com`)
-- Router / VPN / DNS: `192.168.0.1`
+- Router: `192.168.0.1` (forwards 80/443 to NPM)
 
 Replace `example.com` with your own domain.
 
@@ -82,7 +82,7 @@ curl -s http://localhost:5264/version      # {"version":1,"id":"notesnook-sync",
 
 ## 6. Reverse proxy
 
-Follow [npm/README.md](../npm/README.md) to add the access list, the five proxy hosts and the local DNS entry. Then check from the VM:
+Follow [npm/README.md](../npm/README.md) to add the five proxy hosts and the DNS records. Then check from the VM:
 
 ```sh
 for h in sync auth events; do
@@ -90,7 +90,7 @@ for h in sync auth events; do
 done
 ```
 
-From a phone on mobile data with the VPN off, `https://notes-sync.example.com/version` should return 403.
+It should also work from outside, for example from a phone on mobile data: `https://notes-sync.example.com/version`.
 
 ## 7. Email
 
@@ -121,10 +121,9 @@ If the mail server should also deliver to Gmail and other outside domains, it ne
 
 Get the apps from [notesnook.com/downloads](https://notesnook.com/downloads) or use the web app at `https://app.notesnook.com`.
 
-1. Connect to the VPN if you're away from home.
-2. On the login screen, open the server settings.
-3. Enter the four URLs from the README, click **Test connection**, then **Save**.
-4. The app reloads and the login screen shows the name of your instance.
+1. On the login screen, open the server settings.
+2. Enter the four URLs from the README, click **Test connection**, then **Save**.
+3. The app reloads and the login screen shows the name of your instance.
 
 ## 9. Accounts
 
@@ -135,6 +134,8 @@ Then go to **Settings → Authentication** and switch 2FA to an authenticator ap
 On every other device, set the same server URLs and log in with the same account. Create a note and attach an image to make sure sync and attachments both work.
 
 ## 10. Lock it down
+
+The server is reachable from the internet, so close signups once all accounts exist.
 
 ```sh
 cd /opt/notesnook
@@ -151,7 +152,7 @@ systemctl start notesnook-backup && ls /opt/notesnook-backups/
 
 **SeaweedFS says `permission denied` on `/data/s3`.** Run `sh ops/init-volumes.sh`.
 
-**The app says it can't connect to the sync server.** Check that the URLs use `https://` and go through NPM, and that the access list and DNS entry are in place.
+**The app says it can't connect to the sync server.** Check that the URLs use `https://`, the DNS records point to your public IP, and ports 80/443 are forwarded to NPM.
 
 **No 2FA email, and the identity log shows `SslHandshakeException`.** The mail server certificate isn't publicly trusted. See step 7.
 

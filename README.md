@@ -1,6 +1,6 @@
 # notesnook-selfhost
 
-My setup for running a private Notesnook sync server at home. Phones, laptops and desktops all sync through it, and it's only reachable from the LAN or over VPN. Nothing is exposed to the internet.
+My setup for running my own Notesnook sync server at home. Phones, laptops and desktops all sync through it. It's published on my domain through Nginx Proxy Manager, so it works from anywhere without a VPN.
 
 It's based on the official [notesnook-sync-server](https://github.com/streetwriters/notesnook-sync-server) compose file, which is kept unchanged in `docker-compose.yml`. Everything I changed lives in `docker-compose.override.yml`.
 
@@ -11,9 +11,9 @@ The examples use `192.168.0.0/24`:
 - `192.168.0.110` is the Debian VM running the Notesnook stack in Docker
 - `192.168.0.120` is Nginx Proxy Manager, which handles HTTPS with a wildcard cert for `*.example.com`
 - `192.168.0.130` is the mail server (`mail.example.com`) that sends 2FA codes
-- `192.168.0.1` is the router, which also runs the VPN and local DNS
+- `192.168.0.1` is the router, which forwards ports 80 and 443 to NPM
 
-Clients connect to NPM over HTTPS (`notes-sync.example.com` and friends) and NPM forwards to the VM. The Notesnook ports on the VM only accept connections from NPM.
+Clients connect to NPM over HTTPS (`notes-sync.example.com` and friends) and NPM forwards to the VM. The Notesnook ports on the VM only accept connections from NPM, so HTTPS through NPM is the only way in.
 
 ## Changes from the official compose
 
@@ -52,7 +52,7 @@ Plain `http://` won't work. The desktop app runs on the `https://app.notesnook.c
 
 - Notesnook sends 2FA codes by email by default. Without working email you can still sign up, but you won't be able to log in on a second device. Switch to an authenticator app right after signing up.
 - The mail library Notesnook uses checks certificate revocation, so the mail server needs a real certificate (Let's Encrypt is fine). Self-signed certs fail even if you trust the CA.
-- Set `DISABLE_SIGNUPS=true` once everyone has an account.
+- The server is on the internet, so set `DISABLE_SIGNUPS=true` as soon as everyone has an account. Otherwise anyone can register.
 - Backups run every night at 02:30 into `/opt/notesnook-backups` and are kept for 14 days. Copy them off the VM as well.
 
 ## Day to day

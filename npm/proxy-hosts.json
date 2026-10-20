@@ -3,7 +3,7 @@
   "forward_host": "192.168.0.110",
   "forward_scheme": "http",
   "certificate": "*.example.com (Let's Encrypt wildcard)",
-  "access_list": "LAN-VPN-only",
+  "access_list": null,
   "ssl": { "force_ssl": true, "http2": true, "hsts": false },
   "block_exploits": true,
   "hosts": [
